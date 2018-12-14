@@ -9,6 +9,10 @@
 #define PLTT_BUFFER_SIZE 0x200
 #define PLTT_DECOMP_BUFFER_SIZE (PLTT_BUFFER_SIZE * 2)
 
+#define PAL_FLAG_NONE 0x00
+#define PAL_FLAG_DARK 0x01
+#define PAL_FLAG_DULL 0x02
+
 enum
 {
     FAST_FADE_IN_FROM_WHITE,
@@ -43,6 +47,7 @@ extern u8 gPaletteDecompressionBuffer[];
 extern u16 gPlttBufferUnfaded[];
 extern u16 gPlttBufferFaded[];
 
+void LoadCompressedPalette_Ext(const void *src, u16 offset, u16 size, u16 flags);
 void LoadCompressedPalette(const void *, u16, u16);
 void LoadPalette(const void *, u16, u16);
 void FillPalette(u16, u16, u16);
@@ -65,6 +70,10 @@ void BeginFastPaletteFade(u8);
 void BeginHardwarePaletteFade(u8, u8, u8, u8, u8);
 void BlendPalettes(u32, u8, u16);
 void BlendPalettesUnfaded(u32, u8, u16);
+void TintPalette_GrayScale(u16 *palette, u16 count);
+void TintPalette_GrayScale2(u16 *palette, u16 count);
+void TintPalette_SepiaTone(u16 *palette, u16 count);
+void TintPalette_CustomTone(u16 *palette, u16 count, u16 rTone, u16 gTone, u16 bTone);
 void sub_80A2C44(u32 a1, s8 a2, u8 a3, u8 a4, u16 a5, u8 a6, u8 a7);
 
 #endif // GUARD_PALETTE_H

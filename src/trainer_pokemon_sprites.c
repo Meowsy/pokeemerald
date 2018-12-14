@@ -103,19 +103,19 @@ static bool16 DecompressPic_HandleDeoxys(u16 species, u32 personality, bool8 isF
     return DecompressPic(species, personality, isFrontPic, dest, isTrainer, FALSE);
 }
 
-static void LoadPicPaletteByTagOrSlot(u16 species, u32 otId, u32 personality, u8 paletteSlot, u16 paletteTag, bool8 isTrainer)
+static void LoadPicPaletteByTagOrSlot_Ext(u16 species, u32 otId, u32 personality, u8 paletteSlot, u16 paletteTag, bool8 isTrainer, u16 flags)
 {
     if (!isTrainer)
     {
         if (paletteTag == 0xFFFF)
         {
             sCreatingSpriteTemplate.paletteTag |= 0xFFFF;
-            LoadCompressedPalette(GetFrontSpritePalFromSpeciesAndPersonality(species, otId, personality), 0x100 + paletteSlot * 0x10, 0x20);
+            LoadCompressedPalette_Ext(GetFrontSpritePalFromSpeciesAndPersonality(species, otId, personality), 0x100 + paletteSlot * 0x10, 0x20, flags);
         }
         else
         {
             sCreatingSpriteTemplate.paletteTag = paletteTag;
-            LoadCompressedObjectPalette(GetMonSpritePalStructFromOtIdPersonality(species, otId, personality));
+            LoadCompressedObjectPalette_Ext(GetMonSpritePalStructFromOtIdPersonality(species, otId, personality), flags);
         }
     }
     else
@@ -123,14 +123,19 @@ static void LoadPicPaletteByTagOrSlot(u16 species, u32 otId, u32 personality, u8
         if (paletteTag == 0xFFFF)
         {
             sCreatingSpriteTemplate.paletteTag |= 0xFFFF;
-            LoadCompressedPalette(gTrainerFrontPicPaletteTable[species].data, 0x100 + paletteSlot * 0x10, 0x20);
+            LoadCompressedPalette_Ext(gTrainerFrontPicPaletteTable[species].data, 0x100 + paletteSlot * 0x10, 0x20, flags);
         }
         else
         {
             sCreatingSpriteTemplate.paletteTag = paletteTag;
-            LoadCompressedObjectPalette(&gTrainerFrontPicPaletteTable[species]);
+            LoadCompressedObjectPalette_Ext(&gTrainerFrontPicPaletteTable[species], flags);
         }
     }
+}
+
+static void LoadPicPaletteByTagOrSlot(u16 species, u32 otId, u32 personality, u8 paletteSlot, u16 paletteTag, bool8 isTrainer)
+{
+    LoadPicPaletteByTagOrSlot_Ext(species, otId, personality, paletteSlot, paletteTag, isTrainer, PAL_FLAG_NONE);
 }
 
 static void LoadPicPaletteBySlot(u16 species, u32 otId, u32 personality, u8 paletteSlot, bool8 isTrainer)
@@ -149,7 +154,9 @@ static void AssignSpriteAnimsTable(bool8 isTrainer)
         sCreatingSpriteTemplate.anims = gTrainerFrontAnimsPtrTable[0];
 }
 
-static u16 CreatePicSprite(u16 species, u32 otId, u32 personality, bool8 isFrontPic, s16 x, s16 y, u8 paletteSlot, u16 paletteTag, bool8 isTrainer, bool8 ignoreDeoxys)
+static const u16 gPalCompressed_Black[] = INCBIN_U16("graphics/pokedex/black.gbapal.lz");
+
+static u16 CreatePicSprite_Ext(u16 species, u32 otId, u32 personality, bool8 isFrontPic, s16 x, s16 y, u8 paletteSlot, u16 paletteTag, bool8 isTrainer, bool8 ignoreDeoxys, u16 flags)
 {
     u8 i;
     u8 *framePics;
@@ -195,7 +202,18 @@ static u16 CreatePicSprite(u16 species, u32 otId, u32 personality, bool8 isFront
     sCreatingSpriteTemplate.images = images;
     sCreatingSpriteTemplate.affineAnims = gDummySpriteAffineAnimTable;
     sCreatingSpriteTemplate.callback = DummyPicSpriteCallback;
-    LoadPicPaletteByTagOrSlot(species, otId, personality, paletteSlot, paletteTag, isTrainer);
+	if ((flags & PAL_FLAG_DARK) != FALSE)
+	{
+		LoadCompressedPalette(&gPalCompressed_Black, 0x100 + paletteSlot * 0x10, 0x20);
+	}
+	else if ((flags & PAL_FLAG_DULL) != FALSE)
+	{
+		LoadPicPaletteByTagOrSlot_Ext(species, otId, personality, paletteSlot, paletteTag, isTrainer, flags);
+	}
+	else
+	{
+		LoadPicPaletteByTagOrSlot(species, otId, personality, paletteSlot, paletteTag, isTrainer);
+	}
     spriteId = CreateSprite(&sCreatingSpriteTemplate, x, y, 0);
     if (paletteTag == 0xFFFF)
     {
@@ -209,9 +227,14 @@ static u16 CreatePicSprite(u16 species, u32 otId, u32 personality, bool8 isFront
     return spriteId;
 }
 
+static u16 CreatePicSprite(u16 species, u32 otId, u32 personality, bool8 isFrontPic, s16 x, s16 y, u8 paletteSlot, u16 paletteTag, bool8 isTrainer, bool8 ignoreDeoxys)
+{
+	return CreatePicSprite_Ext(species, otId, personality, isFrontPic, x, y,paletteSlot, paletteTag, isTrainer, ignoreDeoxys, PAL_FLAG_NONE);
+}
+
 static u16 CreatePicSprite_HandleDeoxys(u16 species, u32 otId, u32 personality, bool8 isFrontPic, s16 x, s16 y, u8 paletteSlot, u16 paletteTag, bool8 isTrainer)
 {
-    return CreatePicSprite(species, otId, personality, isFrontPic, x, y, paletteSlot, paletteTag, isTrainer, FALSE);
+    return CreatePicSprite_Ext(species, otId, personality, isFrontPic, x, y, paletteSlot, paletteTag, isTrainer, FALSE, PAL_FLAG_NONE);
 }
 
 u16 CreatePicSprite2(u16 species, u32 otId, u32 personality, u8 flags, s16 x, s16 y, u8 paletteSlot, u16 paletteTag)
@@ -360,6 +383,11 @@ static u16 CreateMonPicSprite(u16 species, u32 otId, u32 personality, bool8 isFr
 u16 CreateMonPicSprite_HandleDeoxys(u16 species, u32 otId, u32 personality, bool8 isFrontPic, s16 x, s16 y, u8 paletteSlot, u16 paletteTag)
 {
     return CreateMonPicSprite(species, otId, personality, isFrontPic, x, y, paletteSlot, paletteTag, FALSE);
+}
+
+u16 CreateMonPicSprite_HandleDeoxys_Ext(u16 species, u32 otId, u32 personality, bool8 isFrontPic, s16 x, s16 y, u8 paletteSlot, u16 paletteTag, u16 flags)
+{
+    return CreatePicSprite_Ext(species, otId, personality, isFrontPic, x, y, paletteSlot, paletteTag, FALSE, FALSE, flags);
 }
 
 u16 FreeAndDestroyMonPicSprite(u16 spriteId)

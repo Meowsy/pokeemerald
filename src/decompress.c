@@ -4,6 +4,7 @@
 #include "text.h"
 #include "alloc.h"
 #include "pokemon.h"
+#include "palette.h"
 
 EWRAM_DATA ALIGNED(4) u8 gDecompressionBuffer[0x4000] = {0};
 
@@ -44,14 +45,24 @@ void LoadCompressedObjectPicOverrideBuffer(const struct CompressedSpriteSheet *s
     LoadSpriteSheet(&dest);
 }
 
-void LoadCompressedObjectPalette(const struct CompressedSpritePalette *src)
+void LoadCompressedObjectPalette_Ext(const struct CompressedSpritePalette *src, u16 flags)
 {
     struct SpritePalette dest;
 
     LZ77UnCompWram(src->data, gDecompressionBuffer);
     dest.data = (void*) gDecompressionBuffer;
     dest.tag = src->tag;
+	if ((flags & PAL_FLAG_DULL) != FALSE)
+	{
+		// TODO: Implement this.
+		//TintPalette_GrayScale(&gDecompressionBuffer, 16);
+	}
     LoadSpritePalette(&dest);
+}
+
+void LoadCompressedObjectPalette(const struct CompressedSpritePalette *src)
+{
+    return LoadCompressedObjectPalette_Ext(src, PAL_FLAG_NONE);
 }
 
 void LoadCompressedObjectPaletteOverrideBuffer(const struct CompressedSpritePalette *a, void *buffer)

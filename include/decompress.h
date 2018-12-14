@@ -12,6 +12,7 @@ u16 LoadCompressedObjectPic(const struct CompressedSpriteSheet *src);
 void LoadCompressedObjectPicOverrideBuffer(const struct CompressedSpriteSheet *src, void *buffer);
 bool8 LoadCompressedObjectPicUsingHeap(const struct CompressedSpriteSheet* src);
 
+void LoadCompressedObjectPalette_Ext(const struct CompressedSpritePalette *src, u16 flags);
 void LoadCompressedObjectPalette(const struct CompressedSpritePalette *src);
 void LoadCompressedObjectPaletteOverrideBuffer(const struct CompressedSpritePalette *a, void *buffer);
 bool8 LoadCompressedObjectPaletteUsingHeap(const struct CompressedSpritePalette *src);

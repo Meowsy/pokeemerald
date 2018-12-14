@@ -2453,10 +2453,7 @@ u16 sub_80BDA8C(u16 a1)
 {
     if (a1 >= NATIONAL_DEX_COUNT || sPokedexView->pokedexList[a1].dexNum == 0xFFFF)
         return 0xFFFF;
-    else if (sPokedexView->pokedexList[a1].seen)
-        return sPokedexView->pokedexList[a1].dexNum;
-    else
-        return 0;
+    return sPokedexView->pokedexList[a1].dexNum;
 }
 
 u32 sub_80BDACC(u16 num, s16 x, s16 y)
@@ -4645,8 +4642,21 @@ u32 sub_80C0E68(u16 a)
 
 u16 sub_80C0E9C(u16 num, s16 x, s16 y, u16 paletteSlot)
 {
-    num = NationalPokedexNumToSpecies(num);
-    return CreateMonPicSprite_HandleDeoxys(num, 8, sub_80C0E68(num), TRUE, x, y, paletteSlot, 0xFFFF);
+    u16 species = NationalPokedexNumToSpecies(num);
+    u16 flags;
+    if (GetSetPokedexFlag(num, FLAG_GET_CAUGHT))
+    {
+        flags = PAL_FLAG_NONE;
+    }
+    else if (GetSetPokedexFlag(num, FLAG_GET_SEEN))
+    {
+        flags = PAL_FLAG_DULL;
+    }
+    else
+    {
+        flags = PAL_FLAG_DARK;
+    }
+    return CreateMonPicSprite_HandleDeoxys_Ext(species, 8, sub_80C0E68(species), TRUE, x, y, paletteSlot, 0xFFFF, flags);
 }
 
 u16 sub_80C0EF8(u16 species, s16 x, s16 y, s8 paletteSlot)
